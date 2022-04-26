@@ -4,20 +4,19 @@ import cn.hutool.core.collection.ListUtil;
 import cn.hutool.core.util.StrUtil;
 import com.nekoimi.standalone.framework.config.properties.AppProperties;
 import com.nekoimi.standalone.framework.contract.CacheKey;
-import com.nekoimi.standalone.framework.error.exception.FailedToOperationErrorException;
 import com.nekoimi.standalone.framework.utils.ClazzUtils;
 import com.nekoimi.standalone.framework.utils.JsonUtils;
 import com.nekoimi.standalone.framework.web.PageResult;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ReactiveRedisTemplate;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.time.Duration;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.Callable;
-import java.util.stream.Collectors;
 
 /**
  * nekoimi  2022/3/30 10:39
@@ -30,7 +29,7 @@ public class RedisCache {
     @Autowired
     private AppProperties properties;
     @Autowired
-    private RedisTemplate<String, String> redisTemplate;
+    private ReactiveRedisTemplate<String, String> redisTemplate;
 
     /**
      * <p>拼接缓存键</p>
@@ -62,7 +61,7 @@ public class RedisCache {
      * @param <T>
      * @return
      */
-    public <T> T get(CacheKey cacheKey, Callable<T> callable) {
+    public <T> Mono<T> get(CacheKey cacheKey, Callable<Mono<T>> callable) {
         return get(cacheKey, List.of(), callable);
     }
 
@@ -75,7 +74,7 @@ public class RedisCache {
      * @param <T>
      * @return
      */
-    public <T> T get(CacheKey cacheKey, Object keyArg, Callable<T> callable) {
+    public <T> Mono<T> get(CacheKey cacheKey, Object keyArg, Callable<Mono<T>> callable) {
         return get(cacheKey, List.of(keyArg), callable);
     }
 
@@ -88,46 +87,41 @@ public class RedisCache {
      * @param <T>
      * @return
      */
-    public <T> T get(CacheKey cacheKey, List<Object> keyArgs, Callable<T> callable) {
-        String key = createKey(cacheKey.key(), keyArgs);
-        log.debug("CACHE_GET: {}", key);
-        String json = null;
-        Boolean bool = redisTemplate.hasKey(key);
-        if (bool != null && bool) {
-            json = redisTemplate.opsForValue().get(key);
-            log.debug("CACHE_GET: {}, 找到缓存，直接返回缓存结果", key);
-        } else {
-            T t = null;
-            try {
-                t = callable.call();
-            } catch (Exception e) {
-                log.error(e.getMessage(), e);
-                e.printStackTrace();
-                throw new FailedToOperationErrorException();
-            }
-            if (t != null) {
-                boolean emptyPageResult = false;
-                // 分页结果为空的话不需要缓存
-                if (ClazzUtils.instanceOf(t.getClass(), PageResult.class)) {
-                    PageResult tp = (PageResult) t;
-                    if (tp.getTotal() == 0 || tp.getList().size() <= 0) {
-                        emptyPageResult = true;
+    public <T> Mono<T> get(CacheKey cacheKey, List<Object> keyArgs, Callable<Mono<T>> callable) {
+        return Mono.fromCallable(() -> createKey(cacheKey.key(), keyArgs)).flatMap(key -> {
+            log.debug("CACHE_GET: {}", key);
+            return redisTemplate.hasKey(key).flatMap(b -> {
+                if (b) {
+                    return redisTemplate.opsForValue().get(key);
+                } else {
+                    Mono<T> callResult;
+                    try {
+                        callResult = callable.call();
+                    } catch (Exception e) {
+                        log.error(e.getMessage(), e);
+                        return Mono.empty();
                     }
-                }
-                if (!emptyPageResult) {
-                    json = JsonUtils.write(t);
-                    if (StrUtil.isNotEmpty(json)) {
+                    return callResult.flatMap(t -> {
+                        // 分页结果为空的话不需要缓存
+                        if (ClazzUtils.instanceOf(t.getClass(), PageResult.class)) {
+                            PageResult pageResult = (PageResult) t;
+                            if (pageResult.getTotal() == 0 || pageResult.getList().size() <= 0) {
+                                return Mono.empty();
+                            }
+                        }
+                        return Mono.justOrEmpty(JsonUtils.write(t));
+                    }).flatMap(json -> {
                         if (Duration.ZERO.equals(cacheKey.ttl())) {
                             redisTemplate.opsForValue().set(key, json);
                         } else {
                             redisTemplate.opsForValue().set(key, json, cacheKey.ttl());
                         }
                         log.debug("CACHE_GET: {}, 未找到缓存，获取调用结果并缓存", key);
-                    }
+                        return Mono.just(json);
+                    });
                 }
-            }
-        }
-        if (json != null) {
+            });
+        }).flatMap(json -> (Mono<? extends T>) Mono.fromCallable(() -> {
             if (cacheKey.getResultType() != null) {
                 return (T) JsonUtils.read(json, cacheKey.getResultType());
             } else if (cacheKey.getResultRef() != null) {
@@ -135,8 +129,8 @@ public class RedisCache {
             } else if (cacheKey.getResultJavaType() != null) {
                 return (T) JsonUtils.read(json, cacheKey.getResultJavaType());
             }
-        }
-        return null;
+            return Mono.empty();
+        }));
     }
 
     /**
@@ -144,8 +138,11 @@ public class RedisCache {
      *
      * @param keys key列表
      */
-    public void clearKeys(String... keys) {
-        redisTemplate.delete(ListUtil.of(keys).stream().map(this::createKey).collect(Collectors.toList()));
+    public Mono<Void> clearKeys(String... keys) {
+        return Flux.fromIterable(ListUtil.of(keys))
+                .map(this::createKey)
+                .flatMap(redisTemplate::delete)
+                .then();
     }
 
     /**
@@ -153,12 +150,12 @@ public class RedisCache {
      *
      * @param keys key列表
      */
-    public void clearKeysMatchAll(String... keys) {
-        ListUtil.of(keys).stream().map(this::createKey).map(key -> key + "*").forEach(keyMatch -> {
-            Set<String> keySet = redisTemplate.keys(keyMatch);
-            if (keySet != null && !keySet.isEmpty()) {
-                redisTemplate.delete(keySet);
-            }
-        });
+    public Mono<Void> clearKeysMatchAll(String... keys) {
+        return Flux.fromIterable(ListUtil.of(keys))
+                .map(this::createKey)
+                .map(key -> key + "*")
+                .flatMap(keyMatch -> redisTemplate.keys(keyMatch)
+                        .flatMap(redisTemplate::delete)
+                ).then();
     }
 }
