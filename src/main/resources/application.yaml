@@ -1,0 +1,114 @@
+debug: true
+server:
+  port: 8080
+  address: 0.0.0.0
+  http2:
+    enabled: true
+  shutdown: graceful
+  error:
+    include-binding-errors: always
+    include-message: always
+    include-stacktrace: always
+    include-exception: true
+    whitelabel:
+      enabled: false
+spring:
+  profiles:
+    active: dev
+  application:
+    name: nk-standalone-framework
+  main:
+    banner-mode: off
+    web-application-type: reactive
+    allow-bean-definition-overriding: false
+  flyway:
+    enabled: true
+    table: migrations
+    locations: classpath:migrations
+    baseline-on-migrate: true
+    sql-migration-prefix: v
+    repeatable-sql-migration-prefix: repeat
+    clean-disabled: true
+    driver-class-name: org.postgresql.Driver
+  datasource:
+    driver-class-name: com.p6spy.engine.spy.P6SpyDriver
+    type: com.zaxxer.hikari.HikariDataSource
+    url: jdbc:p6spy:postgresql://127.0.0.1:5432/test?useUnicode=true&amp;characterEncoding=utf8&amp;useSSL=false&amp;allowPublicKeyRetrieval=true
+    username: postgres
+    password: 123456
+    hikari:
+      pool-name: ${spring.application.name}-hikari-cp-pool
+      auto-commit: true
+      minimum-idle: 5
+      maximum-pool-size: 10
+      max-lifetime: 1800000
+      idle-timeout: 30000
+      connection-timeout: 30000
+      connection-test-query: SELECT 1
+  redis:
+    host: 127.0.0.1
+    port: 6379
+    password: 123456
+    database: 0
+    timeout: 300
+    lettuce:
+      pool:
+        max-active: 8  # 最大连接数
+        max-wait: -1   # 最大阻塞等待时间
+        max-idle: 8    # 最大空闲时间
+        min-idle: 0    # 最小空闲时间
+mybatis-plus:
+  global-config:
+    banner: false
+    enable-sql-runner: true
+    db-config:
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+  configuration:
+    default-enum-type-handler: org.apache.ibatis.type.EnumTypeHandler
+  check-config-location: true
+  # type-enums-package: com.nekoimi.standalone.enums
+  mapper-locations: classpath*:com/nekoimi/standalone/mapper/xml/**.xml
+app:
+  app-key: 123456
+  web:
+    swagger:
+      enabled: true
+      permit-all:
+        - /
+  id-generator:
+    worker-id: 1
+    data-center-id: 1
+  jwt:
+    secret: ${app.app-key}
+    ttl: 1440                       # token有效期 (默认天)
+    refresh-ttl: 20160            # token无痛刷新有效期 (默认2周)
+    refresh-concurrent-ttl: 5     # 并发请求临时缓存有效期 (默认5分钟)
+  cors:
+    allow-credentials: false
+    allowed-origin-patterns:
+      - "/**"
+    allowed-origins:
+      - "*"
+    allowed-methods:
+      - GET
+      - POST
+      - PUT
+      - DELETE
+    allowed-headers:
+      - "*"
+    exposed-headers:
+      - Authorization
+    max-age: 3600
+  security:
+    permit-all:
+      - /
+      - /user/list
+  storage:
+    # 配置后端服务访问的主机地址
+    host:
+    # 配置本地文件保存的文件夹路径（绝对路径）
+    local-path: C:/Users/nekoimi/Downloads/tmp/nk-standalone-framework
+    # 静态文件下载
+    static-map:
+      test: static/test.txt

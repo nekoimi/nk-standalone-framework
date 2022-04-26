@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.nekoimi.standalone.mapper.FileInfoMapper">
+    <!--
+        FileInfo Mapper XML
+
+        通用返回结果映射
+    -->
+    <resultMap id="base_result_map" type="com.nekoimi.standalone.entity.FileInfo">
+        <result column="id" property="id"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+        <result column="deleted" property="deleted"/>
+        <result column="filename" property="filename"/>
+        <result column="file_size" property="fileSize"/>
+        <result column="mime_type" property="mimeType"/>
+        <result column="relative_path" property="relativePath"/>
+    </resultMap>
+
+    <!--  通用字段列表  -->
+    <sql id="base_column_list">
+        id,
+        created_at,
+        updated_at,
+        deleted,
+        filename,
+        file_size,
+        mime_type,
+        relative_path,
+    </sql>
+
+</mapper>
