@@ -106,18 +106,20 @@ public class RedisCache {
                         if (ClazzUtils.instanceOf(t.getClass(), PageResult.class)) {
                             PageResult pageResult = (PageResult) t;
                             if (pageResult.getTotal() == 0 || pageResult.getList().size() <= 0) {
-                                return Mono.empty();
+                                // 需要返回空的分页数据结构
+                                return Mono.justOrEmpty(JsonUtils.write(t));
                             }
                         }
-                        return Mono.justOrEmpty(JsonUtils.write(t));
-                    }).flatMap(json -> {
-                        if (Duration.ZERO.equals(cacheKey.ttl())) {
-                            redisTemplate.opsForValue().set(key, json);
-                        } else {
-                            redisTemplate.opsForValue().set(key, json, cacheKey.ttl());
-                        }
-                        log.debug("CACHE_GET: {}, 未找到缓存，获取调用结果并缓存", key);
-                        return Mono.just(json);
+                        return Mono.justOrEmpty(JsonUtils.write(t))
+                                .flatMap(json -> {
+                                    if (Duration.ZERO.equals(cacheKey.ttl())) {
+                                        redisTemplate.opsForValue().set(key, json);
+                                    } else {
+                                        redisTemplate.opsForValue().set(key, json, cacheKey.ttl());
+                                    }
+                                    log.debug("CACHE_GET: {}, 未找到缓存，获取调用结果并缓存", key);
+                                    return Mono.just(json);
+                                });
                     });
                 }
             });
