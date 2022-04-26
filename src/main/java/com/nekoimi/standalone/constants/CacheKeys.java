@@ -10,7 +10,7 @@ import java.time.Duration;
  * nekoimi  2022/4/1 10:45
  */
 public enum CacheKeys implements CacheKey {
-    USER_INFO("user-info:", Duration.ofMinutes(10), Object.class, "用户信息缓存"),
+    DEMO("demo:", Duration.ofMinutes(10), Object.class, "测试缓存"),
     ;
 
     // 缓存键
