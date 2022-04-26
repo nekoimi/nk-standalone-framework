@@ -1,6 +1,7 @@
 package com.nekoimi.standalone;
 
 import cn.hutool.core.util.StrUtil;
+import com.nekoimi.standalone.framework.annotations.EnableQuartz;
 import com.nekoimi.standalone.framework.annotations.EnableSecurityAccess;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -14,6 +15,7 @@ import org.springframework.context.ConfigurableApplicationContext;
 import java.net.Inet4Address;
 
 @Slf4j
+//@EnableQuartz
 //@EnableSecurityAccess
 @SpringBootApplication
 public class StartApplication {

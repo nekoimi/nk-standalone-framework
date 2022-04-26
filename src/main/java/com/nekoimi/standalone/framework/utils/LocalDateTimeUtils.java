@@ -1,5 +1,7 @@
 package com.nekoimi.standalone.framework.utils;
 
+import com.nekoimi.standalone.framework.constants.DateTimeConstants;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -10,6 +12,15 @@ import java.time.format.DateTimeFormatter;
  * @author nekoimi 2022/4/26
  */
 public class LocalDateTimeUtils {
+
+    /**
+     * <p>获取当前时间</p>
+     *
+     * @return
+     */
+    public static String now() {
+        return nowFormat(DateTimeConstants.DEFAULT_DATE_TIME_FORMAT);
+    }
 
     /**
      * <p>格式化当前日期时间</p>
