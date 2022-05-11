@@ -168,8 +168,7 @@ public class ReactiveCrudService<M extends BaseMapper<E>, E> implements Reactive
     @Transactional(readOnly = true)
     @Override
     public Mono<E> getById(Serializable id) {
-        return Mono.fromCallable(() -> mapper.selectById(id))
-                .flatMap(Mono::justOrEmpty)
+        return Mono.defer(() -> Mono.justOrEmpty(mapper.selectById(id)))
                 .subscribeOn(Schedulers.boundedElastic());
     }
 
@@ -179,8 +178,7 @@ public class ReactiveCrudService<M extends BaseMapper<E>, E> implements Reactive
         return Mono.just(consumer)
                 .map(this::applyQueryConsumer)
                 .publishOn(Schedulers.boundedElastic())
-                .map(eqw -> mapper.selectOne(eqw))
-                .flatMap(Mono::justOrEmpty);
+                .flatMap(eqw -> Mono.justOrEmpty(mapper.selectOne(eqw)));
     }
 
     @Transactional(readOnly = true)
@@ -189,8 +187,7 @@ public class ReactiveCrudService<M extends BaseMapper<E>, E> implements Reactive
         return Mono.just(consumer)
                 .map(this::applyQueryMapConsumer)
                 .publishOn(Schedulers.boundedElastic())
-                .map(eqw -> mapper.selectOne(eqw))
-                .flatMap(Mono::justOrEmpty);
+                .flatMap(eqw -> Mono.justOrEmpty(mapper.selectOne(eqw)));
     }
 
     @Override
@@ -374,9 +371,9 @@ public class ReactiveCrudService<M extends BaseMapper<E>, E> implements Reactive
             if (keyValue == null || keyValue.toString().length() <= 0) {
                 return save(e);
             }
-            return exists(keyProperty).flatMap(bool -> {
+            return exists((Serializable) keyValue).flatMap(bool -> {
                 if (bool) {
-                    return update(e);
+                    return update(e).thenReturn(((Serializable) keyValue));
                 } else {
                     return save(e);
                 }
