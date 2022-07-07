@@ -1,11 +1,11 @@
 package com.nekoimi.standalone.framework.mybatis;
 
-import com.nekoimi.standalone.framework.error.ErrorDetails;
+import com.nekoimi.standalone.framework.error.IErrorDetails;
 
 /**
  * nekoimi  2021/12/18 17:53
  */
-public enum CrudErrors implements ErrorDetails {
+public enum CrudErrors implements IErrorDetails {
     RESOURCE_NOT_FOUND(10600, "resource not found"),
     RESOURCE_QUERY_FAILED(10601, "resource query found"),
     RESOURCE_SAVING_FAILED(10602, "resource saving failed"),

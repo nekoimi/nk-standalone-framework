@@ -11,6 +11,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ConfigurableApplicationContext;
+import reactor.netty.http.server.HttpServer;
 
 import java.net.Inet4Address;
 
@@ -22,12 +23,14 @@ public class StartApplication {
 
     @SneakyThrows
     public static void main(String[] args) {
+        HttpServer.create().bind().block();
         SpringApplicationBuilder builder = new SpringApplicationBuilder(StartApplication.class);
         builder.bannerMode(Banner.Mode.OFF);
         builder.application().setWebApplicationType(WebApplicationType.REACTIVE);
         ConfigurableApplicationContext context = builder.run(args);
         ServerProperties properties = context.getBean(ServerProperties.class);
         String hostAddress = StrUtil.format("{}:{}", Inet4Address.getLocalHost().getHostAddress(), properties.getPort());
-        log.info("Listening on http://{}, Swagger url: http://{}/doc.html", hostAddress, hostAddress);
+        log.info("Listening on http://{}", hostAddress);
+        log.info("Swagger url: http://{}/doc.html", hostAddress);
     }
 }

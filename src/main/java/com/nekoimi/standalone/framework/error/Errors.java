@@ -3,7 +3,7 @@ package com.nekoimi.standalone.framework.error;
 /**
  * nekoimi  2021/12/10 17:12
  */
-public enum Errors implements ErrorDetails {
+public enum Errors implements IErrorDetails {
     //
     // code 从 10000 开始往上加，越是底层错误 code 越大
     //

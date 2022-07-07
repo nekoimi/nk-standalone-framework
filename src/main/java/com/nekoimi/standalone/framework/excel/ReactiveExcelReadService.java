@@ -14,12 +14,12 @@ import java.io.InputStream;
  */
 @Service
 @AllArgsConstructor
-public class ReactiveExcelImportService implements ExcelImportService {
+public class ReactiveExcelReadService implements ExcelReadService {
     private final FileService fileService;
 
     @Override
     public <T> Flux<RowResult<T>> doImport(Class<T> rowType, InputStream stream) {
-        return ReadExcelListener.of(stream, rowType);
+        return ExcelReadListener.of(stream, rowType);
     }
 
     @Override

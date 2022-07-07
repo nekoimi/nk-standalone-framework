@@ -11,6 +11,10 @@ import org.apache.ibatis.mapping.SqlSource;
  */
 public class SelectPageWithHandler extends AbstractMethod {
 
+    public SelectPageWithHandler() {
+        super(ExtendSqlMethod.SELECT_PAGE_WITH_HANDLER.getMethod());
+    }
+
     @Override
     public MappedStatement injectMappedStatement(Class<?> mapperClass, Class<?> modelClass, TableInfo tableInfo) {
         ExtendSqlMethod method = ExtendSqlMethod.SELECT_PAGE_WITH_HANDLER;

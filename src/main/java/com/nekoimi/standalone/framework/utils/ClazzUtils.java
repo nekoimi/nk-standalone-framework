@@ -1,6 +1,7 @@
 package com.nekoimi.standalone.framework.utils;
 
 import cn.hutool.core.util.StrUtil;
+import com.baomidou.mybatisplus.core.toolkit.ReflectionKit;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Field;
@@ -50,15 +51,14 @@ public class ClazzUtils {
      * @param clazz
      * @return
      */
-    public static Field[] getAllFields(Class<?> clazz) {
+    public static List<Field> getFieldList(Class<?> clazz) {
         List<Field> fieldList = new ArrayList<>();
         while (clazz != null) {
             Field[] fields = clazz.getDeclaredFields();
             fieldList.addAll(Arrays.asList(fields));
             clazz = clazz.getSuperclass();
         }
-        Field[] results = new Field[fieldList.size()];
-        return fieldList.toArray(results);
+        return fieldList;
     }
 
     /**

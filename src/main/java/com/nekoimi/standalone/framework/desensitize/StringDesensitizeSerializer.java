@@ -1,4 +1,4 @@
-package com.nekoimi.standalone.framework.json;
+package com.nekoimi.standalone.framework.desensitize;
 
 import cn.hutool.core.util.DesensitizedUtil;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -7,7 +7,6 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.ContextualSerializer;
-import com.nekoimi.standalone.framework.annotations.JsonFieldDesensitize;
 
 import java.io.IOException;
 import java.util.Objects;

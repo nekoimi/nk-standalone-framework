@@ -32,7 +32,7 @@ public class ServerErrorHandler implements ErrorWebExceptionHandler, Ordered {
             ex.printStackTrace();
         }
         return handlerResolver.resolve(ex)
-                .flatMap(handler -> (Mono<ErrorDetails>) handler.handle(exchange, ex))
+                .flatMap(handler -> (Mono<IErrorDetails>) handler.handle(exchange, ex))
                 .flatMap(error -> resultWriter.writer(exchange, error))
                 .doOnError(e -> log.error("server error handler -- \n" + e.getMessage(), e));
     }

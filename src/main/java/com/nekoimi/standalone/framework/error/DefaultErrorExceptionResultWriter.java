@@ -28,14 +28,14 @@ import java.util.List;
 public class DefaultErrorExceptionResultWriter implements ErrorExceptionResultWriter {
     private final List<ErrorExceptionWriter> writers;
 
-    private void doWriter(ServerWebExchange exchange, ErrorDetails error) {
+    private void doWriter(ServerWebExchange exchange, IErrorDetails error) {
         writers.forEach(writer -> {
             log.debug("result writer do writer -- {}", ClassUtil.getClassName(writer, true));
             writer.writer(exchange, error);
         });
     }
 
-    public Mono<Void> httpWriter(ServerWebExchange exchange, ErrorDetails error) {
+    public Mono<Void> httpWriter(ServerWebExchange exchange, IErrorDetails error) {
         return Mono.defer(() -> {
             ServerHttpResponse response = exchange.getResponse();
             response.setStatusCode(HttpStatus.OK);
@@ -49,7 +49,7 @@ public class DefaultErrorExceptionResultWriter implements ErrorExceptionResultWr
     }
 
     @Override
-    public Mono<Void> writer(ServerWebExchange exchange, ErrorDetails error) {
+    public Mono<Void> writer(ServerWebExchange exchange, IErrorDetails error) {
         doWriter(exchange, error);
         return httpWriter(exchange, error);
     }

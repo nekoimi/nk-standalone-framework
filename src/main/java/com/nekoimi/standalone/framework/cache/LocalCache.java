@@ -1,7 +1,5 @@
 package com.nekoimi.standalone.framework.cache;
 
-import com.github.benmanes.caffeine.cache.Caffeine;
-
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.Supplier;
@@ -11,31 +9,31 @@ import java.util.function.Supplier;
  *
  * 本地缓存
  */
-public class ConcurrentLocalCache {
+public class LocalCache {
     private static final Supplier<ConcurrentMap<Object, Object>> cacheSupplier;
 
     static {
-        if (caffeinePresent()) {
-            cacheSupplier = ConcurrentLocalCache::createCaffeine;
+        if (caffeineSupport()) {
+            cacheSupplier = LocalCache::createCaffeine;
         } else {
             cacheSupplier = ConcurrentHashMap::new;
         }
     }
 
-    private static boolean caffeinePresent() {
+    public static <K, V> ConcurrentMap<K, V> newCache() {
+        return (ConcurrentMap<K, V>) cacheSupplier.get();
+    }
+
+    private static ConcurrentMap<Object, Object> createCaffeine() {
+        return com.github.benmanes.caffeine.cache.Caffeine.newBuilder().build().asMap();
+    }
+
+    private static boolean caffeineSupport() {
         try {
             Class.forName("com.github.benmanes.caffeine.cache.Cache");
             return true;
         } catch (ClassNotFoundException e) {
             return false;
         }
-    }
-
-    private static ConcurrentMap<Object, Object> createCaffeine() {
-        return Caffeine.newBuilder().build().asMap();
-    }
-
-    public static <K, V> ConcurrentMap<K, V> newCache() {
-        return (ConcurrentMap<K, V>) cacheSupplier.get();
     }
 }

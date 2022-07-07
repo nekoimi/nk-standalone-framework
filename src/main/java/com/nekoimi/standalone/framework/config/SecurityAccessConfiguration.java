@@ -1,18 +1,17 @@
 package com.nekoimi.standalone.framework.config;
 
 import com.nekoimi.standalone.framework.config.properties.SecurityProperties;
-import com.nekoimi.standalone.framework.runner.JwtBuilderRunner;
+import com.nekoimi.standalone.framework.constants.SecurityAllow;
+import com.nekoimi.standalone.framework.security.RedisSecurityContextRepository;
+import com.nekoimi.standalone.framework.security.SecurityManagerFactory;
 import com.nekoimi.standalone.framework.security.contract.LoginMappingController;
 import com.nekoimi.standalone.framework.security.contract.LogoutMappingController;
 import com.nekoimi.standalone.framework.security.contract.SecurityAuthorizeExchangeCustomizer;
-import com.nekoimi.standalone.framework.security.SecurityManagerFactory;
 import com.nekoimi.standalone.framework.security.filter.BeforeRequestFilter;
 import com.nekoimi.standalone.framework.security.filter.RequestDebugLogFilter;
 import com.nekoimi.standalone.framework.security.filter.ResolverAuthTypeParameterFilter;
 import com.nekoimi.standalone.framework.security.handler.*;
-import com.nekoimi.standalone.framework.security.RedisSecurityContextRepository;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.config.web.server.SecurityWebFiltersOrder;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
@@ -70,11 +69,6 @@ public class SecurityAccessConfiguration {
     }
 
     @Bean
-    public CommandLineRunner jwtBuilderRunner() {
-        return new JwtBuilderRunner();
-    }
-
-    @Bean
     public SecurityWebFilterChain springWebFilterChain(ServerHttpSecurity http) {
         http.securityContextRepository(securityContextRepository);
         // 关闭csrf
@@ -93,10 +87,10 @@ public class SecurityAccessConfiguration {
                 .exceptionHandling(handler -> handler.accessDeniedHandler(accessDeniedHandler).authenticationEntryPoint(authenticationExceptionHandler))
                 // 配置请求过滤
                 .authorizeExchange(exchange -> {
+                    SecurityAllow.RESOURCES_ALL.forEach(s -> exchange.pathMatchers(s).permitAll());
                     properties.getPermitAll().forEach(path -> exchange.pathMatchers(path).permitAll());
                     authorizeExchangeCustomizers.forEach(exchangeCustomizer -> exchangeCustomizer.customize(exchange));
-                    exchange.pathMatchers("/").permitAll()
-                            .matchers(loginExchangeMatcher).permitAll()
+                    exchange.matchers(loginExchangeMatcher).permitAll()
                             .matchers(logoutExchangeMatcher).permitAll()
                             .anyExchange().authenticated();
                 })

@@ -16,10 +16,10 @@ import java.io.InputStream;
  * 该类不能交给Spring容器管理
  */
 @Slf4j
-public class ReadExcelListener<T> extends AnalysisEventListener<T> {
+public class ExcelReadListener<T> extends AnalysisEventListener<T> {
     private FluxSink<RowResult<T>> sink;
 
-    public ReadExcelListener(FluxSink<RowResult<T>> sink) {
+    public ExcelReadListener(FluxSink<RowResult<T>> sink) {
         this.sink = sink;
     }
 
@@ -32,7 +32,7 @@ public class ReadExcelListener<T> extends AnalysisEventListener<T> {
      * @return
      */
     public static <T> Flux<RowResult<T>> of(InputStream fileInputStream, Class<T> rowType) {
-        return Flux.create(fluxSink -> EasyExcel.read(fileInputStream, rowType, new ReadExcelListener<>(fluxSink)).sheet().doRead());
+        return Flux.create(fluxSink -> EasyExcel.read(fileInputStream, rowType, new ExcelReadListener<>(fluxSink)).sheet().doRead());
     }
 
     @Override
@@ -46,13 +46,13 @@ public class ReadExcelListener<T> extends AnalysisEventListener<T> {
 
     @Override
     public void doAfterAllAnalysed(AnalysisContext context) {
-        this.sink.complete();
         log.debug("所有数据解析完成！");
+        this.sink.complete();
     }
 
     @Override
-    public void onException(Exception exception, AnalysisContext context) throws Exception {
-        this.sink.error(exception);
+    public void onException(Exception e, AnalysisContext context) throws Exception {
+        this.sink.error(e);
     }
 
     @Override

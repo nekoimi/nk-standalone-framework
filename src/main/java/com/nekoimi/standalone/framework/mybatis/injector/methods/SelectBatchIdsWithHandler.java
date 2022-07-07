@@ -12,6 +12,10 @@ import org.apache.ibatis.mapping.SqlSource;
  */
 public class SelectBatchIdsWithHandler extends AbstractMethod {
 
+    public SelectBatchIdsWithHandler() {
+        super(ExtendSqlMethod.SELECT_BATCH_BY_IDS_WITH_HANDLER.getMethod());
+    }
+
     @Override
     public MappedStatement injectMappedStatement(Class<?> mapperClass, Class<?> modelClass, TableInfo tableInfo) {
         ExtendSqlMethod method = ExtendSqlMethod.SELECT_BATCH_BY_IDS_WITH_HANDLER;

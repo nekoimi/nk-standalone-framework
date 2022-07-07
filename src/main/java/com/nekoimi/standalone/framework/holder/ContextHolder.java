@@ -12,10 +12,6 @@ import org.springframework.stereotype.Component;
 public class ContextHolder implements ApplicationContextAware {
     private static ApplicationContext INSTANCE;
 
-    /**
-     * 获取上下文实例
-     * @return
-     */
     public static ApplicationContext getInstance() {
         return INSTANCE;
     }

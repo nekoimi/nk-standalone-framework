@@ -20,7 +20,7 @@ import java.util.Locale;
 public class JacksonConfiguration {
 
     /**
-     * Jackson全局配置
+     * <p>Jackson全局配置</p>
      *
      * @param properties
      * @return

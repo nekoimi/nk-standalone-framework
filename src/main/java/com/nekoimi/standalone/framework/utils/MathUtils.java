@@ -2,6 +2,8 @@ package com.nekoimi.standalone.framework.utils;
 
 import cn.hutool.core.util.NumberUtil;
 
+import java.math.RoundingMode;
+
 /**
  * nekoimi  2022/3/30 13:34
  */
@@ -19,7 +21,7 @@ public class MathUtils {
         if (a == 0 || b == 0) {
             return 0;
         }
-        double v = NumberUtil.div(a, b, scale);
+        double v = NumberUtil.div(a, b, scale, RoundingMode.DOWN);
         String format = "%." + scale + "f";
         return NumberUtil.parseDouble(String.format(format, v));
     }
@@ -37,7 +39,7 @@ public class MathUtils {
         if (a == 0 || b == 0) {
             return 0;
         }
-        double v = NumberUtil.div(a, b, scale) * 100;
+        double v = NumberUtil.div(a, b, scale, RoundingMode.DOWN) * 100;
         String format = "%." + scale + "f";
         return NumberUtil.parseDouble(String.format(format, v));
     }

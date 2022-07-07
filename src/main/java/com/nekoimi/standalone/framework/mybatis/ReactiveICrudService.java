@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.support.SFunction;
+import com.nekoimi.standalone.framework.mybatis.helper.QMap;
 import com.nekoimi.standalone.framework.web.PageResult;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -18,7 +19,7 @@ import java.util.function.Consumer;
  *
  * CRUD service interface
  */
-public interface ReactiveICrudService<E> {
+public interface ReactiveICrudService<E extends BaseEntity> {
     Class<E> getEntityClass();
     BaseMapper<E> getMapper();
     QMap<SFunction<E, Object>, Object> queryMap();

@@ -9,7 +9,7 @@ import java.io.InputStream;
  *
  * @author nekoimi 2022/4/25
  */
-public interface ExcelImportService {
+public interface ExcelReadService {
 
     /**
      * <p>根据文件流读取excel</p>

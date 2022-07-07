@@ -1,9 +1,7 @@
 package com.nekoimi.standalone.framework.config;
 
-import com.nekoimi.standalone.framework.config.properties.AppProperties;
-import com.nekoimi.standalone.framework.security.customizer.SwaggerSecurityAuthorizeExchangeCustomizer;
+import com.nekoimi.standalone.framework.constants.SecurityAllow;
 import io.swagger.annotations.ApiOperation;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -28,23 +26,10 @@ import java.util.List;
  */
 @Configuration
 @EnableSwagger2WebFlux
-@ConditionalOnProperty(prefix = "app.web.swagger", name = "enabled", havingValue = "true")
+@ConditionalOnProperty(name = "debug", havingValue = "true")
 public class SwaggerConfiguration {
     @Value("${spring.application.name}")
     private String name;
-    @Autowired
-    private AppProperties appProperties;
-
-    /**
-     * <p>Swagger路径安全访问</p>
-     *
-     * @return
-     */
-    @Bean
-    @ConditionalOnProperty(prefix = "app.web.swagger", name = "enabled", havingValue = "true")
-    public SwaggerSecurityAuthorizeExchangeCustomizer swaggerSecurityAuthorizeExchangeCustomizer() {
-        return new SwaggerSecurityAuthorizeExchangeCustomizer();
-    }
 
     @Bean
     public Docket docket() {
@@ -94,7 +79,7 @@ public class SwaggerConfiguration {
     private boolean pathSelect(String path) {
         AntPathMatcher matcher = new AntPathMatcher();
         boolean b = !matcher.match("/", path);
-        for (String s : appProperties.getWeb().getSwagger().getPermitAll()) {
+        for (String s : SecurityAllow.RESOURCES_ALL) {
             b = !matcher.match(s, path);
         }
         return b;

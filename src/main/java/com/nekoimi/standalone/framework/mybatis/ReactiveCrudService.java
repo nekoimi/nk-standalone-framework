@@ -14,6 +14,7 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.core.toolkit.support.SFunction;
 import com.nekoimi.standalone.framework.cache.RedisCache;
 import com.nekoimi.standalone.framework.mybatis.exception.*;
+import com.nekoimi.standalone.framework.mybatis.helper.QMap;
 import com.nekoimi.standalone.framework.utils.ClazzUtils;
 import com.nekoimi.standalone.framework.utils.JsonUtils;
 import com.nekoimi.standalone.framework.web.PageResult;
@@ -34,7 +35,7 @@ import java.util.function.Consumer;
  * nekoimi  2021/6/13 上午12:03
  */
 @Slf4j
-public class ReactiveCrudService<M extends BaseMapper<E>, E> implements ReactiveICrudService<E> {
+public class ReactiveCrudService<M extends BaseMapper<E>, E extends BaseEntity> implements ReactiveICrudService<E> {
     @Autowired
     protected M mapper;
     @Autowired
@@ -80,8 +81,7 @@ public class ReactiveCrudService<M extends BaseMapper<E>, E> implements Reactive
         var query = lambdaQuery();
         var queryMap = queryMap();
         consumer.accept(queryMap);
-        Set<Map.Entry<SFunction<E, Object>, Object>> entries = queryMap.map().entrySet();
-        entries.forEach(entry -> query.ne(entry.getKey(), entry.getValue()));
+        queryMap.forEach(query::eq);
         return query;
     }
 
@@ -89,8 +89,7 @@ public class ReactiveCrudService<M extends BaseMapper<E>, E> implements Reactive
         var update = lambdaUpdate();
         var updateMap = queryMap();
         consumer.accept(updateMap);
-        Set<Map.Entry<SFunction<E, Object>, Object>> entries = updateMap.map().entrySet();
-        entries.forEach(entry -> update.set(entry.getKey(), entry.getValue()));
+        updateMap.forEach(update::set);
         return update;
     }
 

@@ -1,6 +1,7 @@
 package com.nekoimi.standalone.framework.mybatis.helper;
 
 import java.util.Map;
+import java.util.function.BiConsumer;
 
 /**
  * nekoimi  2021/12/18 17:25
@@ -17,7 +18,7 @@ public class QMap<K, V> {
         return this;
     }
 
-    public Map<K, V> map() {
-        return data;
+    public void forEach(BiConsumer<K, V> action) {
+        this.data.forEach(action);
     }
 }

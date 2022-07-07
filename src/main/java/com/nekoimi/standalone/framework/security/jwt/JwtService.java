@@ -1,4 +1,4 @@
-package com.nekoimi.standalone.framework.utils;
+package com.nekoimi.standalone.framework.security.jwt;
 
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.ClassUtil;
@@ -10,10 +10,10 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 import com.nekoimi.standalone.framework.config.properties.JWTProperties;
 import com.nekoimi.standalone.framework.error.exception.token.TokenBlackListException;
 import com.nekoimi.standalone.framework.error.exception.token.TokenCannotBeRefreshException;
-import com.nekoimi.standalone.framework.security.jwt.JWTStorage;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.userdetails.ReactiveUserDetailsService;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
 import java.util.Date;
@@ -23,25 +23,30 @@ import java.util.Optional;
  * nekoimi  2022/2/16 16:36
  */
 @Slf4j
-public class JwtUtils {
-    private final static String issuer = ClassUtil.getShortClassName(JwtUtils.class.getName());
-    private static JWTStorage jwtStorage;
-    private static ReactiveUserDetailsService userDetailsService;
+@Service
+public class JwtService {
+    private final static String issuer = ClassUtil.getShortClassName(JwtService.class.getName());
+    private final JWTProperties properties;
+    private final JwtStorage jwtStorage;
+    private final ReactiveUserDetailsService userDetailsService;
 
-    private static Algorithm algorithm;
-    private static Integer ttl;
-    private static Integer refreshTtl;
-    private static Integer refreshConcurrentTtl;
+    private Algorithm algorithm;
+    private Integer ttl;
+    private Integer refreshTtl;
+    private Integer refreshConcurrentTtl;
 
-    public static void initialization(JWTProperties properties, ReactiveUserDetailsService userDetailsService) {
-        JwtUtils.algorithm = Algorithm.HMAC256(properties.getSecret());
-        JwtUtils.ttl = properties.getTtl();
-        JwtUtils.refreshTtl = properties.getRefreshTtl();
-        JwtUtils.refreshConcurrentTtl = properties.getRefreshConcurrentTtl();
-        JwtUtils.userDetailsService = userDetailsService;
+    public JwtService(JWTProperties properties, JwtStorage jwtStorage, ReactiveUserDetailsService userDetailsService) {
+        this.properties = properties;
+        this.jwtStorage = jwtStorage;
+        this.userDetailsService = userDetailsService;
+
+        this.algorithm = Algorithm.HMAC256(properties.getSecret());
+        this.ttl = properties.getTtl();
+        this.refreshTtl = properties.getRefreshTtl();
+        this.refreshConcurrentTtl = properties.getRefreshConcurrentTtl();
     }
 
-    public static String encode(UserDetails userDetails) {
+    public String encode(UserDetails userDetails) {
         Date now = new Date();
         JWTCreator.Builder builder = JWT.create();
         builder = builder.withIssuer(issuer);
@@ -54,11 +59,11 @@ public class JwtUtils {
         return token;
     }
 
-    public static String decodeSubject(String token) {
+    public String decodeSubject(String token) {
         return checkParse(token).getSubject();
     }
 
-    public static synchronized String refresh(String token) {
+    public synchronized String refresh(String token) {
         // todo 这里需要检查这个token是否已经被刷新过 旧Token已经被刷新过就不需要在刷新了
         String refreshedToken = jwtStorage.getRefreshed(token);
         if (StrUtil.isNotBlank(refreshedToken)) {
@@ -84,7 +89,7 @@ public class JwtUtils {
         }).block();
     }
 
-    public static DecodedJWT parse(String token) {
+    public DecodedJWT parse(String token) {
         if (jwtStorage.isBlack(token)) {
             String refreshedToken = jwtStorage.getRefreshed(token);
             if (StrUtil.isBlank(refreshedToken)) {
@@ -96,7 +101,7 @@ public class JwtUtils {
         return JWT.decode(token);
     }
 
-    public static DecodedJWT checkParse(String token) {
+    public DecodedJWT checkParse(String token) {
         JWT.require(algorithm).withIssuer(issuer).build().verify(token);
         return parse(token);
     }

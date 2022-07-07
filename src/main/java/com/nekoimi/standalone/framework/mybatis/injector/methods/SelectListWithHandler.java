@@ -15,6 +15,10 @@ import org.apache.ibatis.mapping.SqlSource;
  */
 public class SelectListWithHandler extends AbstractMethod {
 
+    public SelectListWithHandler() {
+        super(ExtendSqlMethod.SELECT_LIST_WITH_HANDLER.getMethod());
+    }
+
     @Override
     public MappedStatement injectMappedStatement(Class<?> mapperClass, Class<?> modelClass, TableInfo tableInfo) {
         ExtendSqlMethod method = ExtendSqlMethod.SELECT_LIST_WITH_HANDLER;

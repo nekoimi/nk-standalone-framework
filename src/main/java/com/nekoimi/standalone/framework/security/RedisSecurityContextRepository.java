@@ -23,7 +23,6 @@ import reactor.core.publisher.Mono;
 @Slf4j
 @Component
 public class RedisSecurityContextRepository implements ServerSecurityContextRepository {
-    private final static String AUTHENTICATION_KEY = "authentication:sub:";
     private final RedisCache redisCache;
 
     public RedisSecurityContextRepository(RedisCache redisCache) {

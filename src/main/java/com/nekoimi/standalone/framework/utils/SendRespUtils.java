@@ -2,7 +2,7 @@ package com.nekoimi.standalone.framework.utils;
 
 import com.nekoimi.standalone.framework.error.Errors;
 import com.nekoimi.standalone.framework.error.exception.BaseRuntimeException;
-import com.nekoimi.standalone.framework.protocol.ErrorDetailsImpl;
+import com.nekoimi.standalone.framework.error.ErrorDetails;
 import lombok.SneakyThrows;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferFactory;
@@ -38,12 +38,12 @@ public class SendRespUtils {
         response.setStatusCode(HttpStatus.OK);
         response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
 
-        ErrorDetailsImpl details = null;
+        ErrorDetails details = null;
         if (e instanceof BaseRuntimeException) {
             BaseRuntimeException baseRe = (BaseRuntimeException) e;
-            details = ErrorDetailsImpl.of(baseRe.getCode(), baseRe.getError().message(), baseRe.getError().trace());
+            details = ErrorDetails.of(baseRe.getCode(), baseRe.getError().message(), baseRe.getError().trace());
         } else {
-            details = ErrorDetailsImpl.of(Errors.DEFAULT_SERVER_ERROR.code(), e.getMessage(), null);
+            details = ErrorDetails.of(Errors.DEFAULT_SERVER_ERROR.code(), e.getMessage(), null);
         }
 
         DataBufferFactory dataBufferFactory = response.bufferFactory();

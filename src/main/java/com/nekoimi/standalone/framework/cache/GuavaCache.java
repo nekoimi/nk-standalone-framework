@@ -10,13 +10,13 @@ import org.slf4j.LoggerFactory;
 import java.time.Duration;
 
 /**
- * nekoimi  2022/4/1 16:26
+ * <p>Guava Cache</p>
  *
- * Guava Cache
+ * @author nekoimi 2022/4/1 16:26
  */
-public abstract class GuavaLocalCache<K, V> {
+public abstract class GuavaCache<K, V> {
     protected final Logger logger = LoggerFactory.getLogger(getClass());
-    private final LoadingCache<K, V> guavaLocalCache;
+    private final LoadingCache<K, V> guavaCache;
     private final CacheLoader<K, V> cacheLoader = new CacheLoader<>() {
         @Override
         public V load(K k) throws Exception {
@@ -24,26 +24,27 @@ public abstract class GuavaLocalCache<K, V> {
         }
     };
 
-    public GuavaLocalCache() {
-        guavaLocalCache = CacheBuilder.newBuilder()
+    public GuavaCache() {
+        this.guavaCache = CacheBuilder.newBuilder()
                 .maximumSize(10204)
                 .build(cacheLoader);
     }
 
-    public GuavaLocalCache(long maxSize) {
-        guavaLocalCache = CacheBuilder.newBuilder()
+    public GuavaCache(long maxSize) {
+        this.guavaCache = CacheBuilder.newBuilder()
                 .maximumSize(maxSize)
                 .build(cacheLoader);
     }
 
-    public GuavaLocalCache(Duration duration) {
-        this.guavaLocalCache = CacheBuilder.newBuilder()
+    public GuavaCache(Duration duration) {
+        this.guavaCache = CacheBuilder.newBuilder()
                 .expireAfterAccess(duration)
                 .build(cacheLoader);
     }
 
     /**
      * 加载数据到缓存
+     *
      * @param key
      * @return
      */
@@ -51,13 +52,14 @@ public abstract class GuavaLocalCache<K, V> {
 
     /**
      * 获取缓存
+     *
      * @param key
      * @return
      */
     public V get(K key) {
         V value = null;
         try {
-            value = guavaLocalCache.getUnchecked(key);
+            value = this.guavaCache.getUnchecked(key);
         } catch (RuntimeException e) {
             logger.error(e.getMessage(), e);
         }
@@ -66,18 +68,20 @@ public abstract class GuavaLocalCache<K, V> {
 
     /**
      * 设置缓存
+     *
      * @param key
      * @param value
      */
     public void set(K key, V value) {
-        guavaLocalCache.put(key, value);
+        this.guavaCache.put(key, value);
     }
 
     /**
      * 刷新缓存
+     *
      * @param key
      */
     public void refresh(K key) {
-        guavaLocalCache.refresh(key);
+        this.guavaCache.refresh(key);
     }
 }

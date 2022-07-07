@@ -1,4 +1,4 @@
-package com.nekoimi.standalone.framework.json;
+package com.nekoimi.standalone.framework.desensitize;
 
 /**
  * nekoimi  2022/1/16 23:15

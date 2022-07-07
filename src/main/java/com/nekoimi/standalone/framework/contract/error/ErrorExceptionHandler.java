@@ -1,6 +1,6 @@
 package com.nekoimi.standalone.framework.contract.error;
 
-import com.nekoimi.standalone.framework.error.ErrorDetails;
+import com.nekoimi.standalone.framework.error.IErrorDetails;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
@@ -22,5 +22,5 @@ public interface ErrorExceptionHandler<E extends Throwable> {
      * @param e
      * @return
      */
-    Mono<? extends ErrorDetails> handle(ServerWebExchange exchange, E e);
+    Mono<? extends IErrorDetails> handle(ServerWebExchange exchange, E e);
 }

@@ -2,7 +2,6 @@ package com.nekoimi.standalone.framework.error;
 
 import cn.hutool.core.exceptions.ExceptionUtil;
 import com.nekoimi.standalone.framework.contract.error.ErrorExceptionHandler;
-import com.nekoimi.standalone.framework.protocol.ErrorDetailsImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
@@ -14,7 +13,7 @@ import reactor.core.publisher.Mono;
 @Slf4j
 @Component
 public class RootExceptionHandler implements ErrorExceptionHandler<Exception> {
-    private static final ErrorDetails error = Errors.DEFAULT_SERVER_ERROR;
+    private static final IErrorDetails error = Errors.DEFAULT_SERVER_ERROR;
 
     @Override
     public Class<Exception> getType() {
@@ -22,12 +21,12 @@ public class RootExceptionHandler implements ErrorExceptionHandler<Exception> {
     }
 
     @Override
-    public Mono<? extends ErrorDetails> handle(ServerWebExchange exchange, Exception e) {
+    public Mono<? extends IErrorDetails> handle(ServerWebExchange exchange, Exception e) {
         log.warn("root exception handler -- \n");
         log.error(e.getMessage(), e);
         if (log.isDebugEnabled()) {
             e.printStackTrace();
         }
-        return Mono.fromCallable(() -> ErrorDetailsImpl.of(error.code(), error.message(), ExceptionUtil.getRootCauseMessage(e)));
+        return Mono.fromCallable(() -> ErrorDetails.of(error.code(), error.message(), ExceptionUtil.getRootCauseMessage(e)));
     }
 }

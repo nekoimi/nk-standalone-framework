@@ -1,7 +1,7 @@
 package com.nekoimi.standalone.framework.error.writer;
 
 import com.nekoimi.standalone.framework.contract.error.ErrorExceptionWriter;
-import com.nekoimi.standalone.framework.error.ErrorDetails;
+import com.nekoimi.standalone.framework.error.IErrorDetails;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
@@ -14,7 +14,7 @@ import reactor.core.publisher.Mono;
 @Component
 public class ExampleErrorExceptionWriter implements ErrorExceptionWriter {
     @Override
-    public Mono<Void> writer(ServerWebExchange exchange, ErrorDetails error) {
+    public Mono<Void> writer(ServerWebExchange exchange, IErrorDetails error) {
         log.warn("example error exception writer -- {}", error.message());
         return Mono.empty();
     }

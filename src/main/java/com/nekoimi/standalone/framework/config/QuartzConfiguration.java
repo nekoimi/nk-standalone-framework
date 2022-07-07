@@ -30,7 +30,7 @@ public class QuartzConfiguration {
     }
 
     /**
-     * 消息处理线程池
+     * <p>处理线程池</p>
      *
      * @return
      */

@@ -10,7 +10,9 @@ import com.nekoimi.standalone.framework.error.exception.FailedToNotFoundErrorExc
 import com.nekoimi.standalone.framework.error.exception.RequestValidationException;
 import com.nekoimi.standalone.framework.utils.LocalDateTimeUtils;
 import com.nekoimi.standalone.framework.utils.ResourceFileUtils;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Primary;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.http.ContentDisposition;
@@ -19,6 +21,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ZeroCopyHttpOutputMessage;
 import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.http.server.reactive.ServerHttpResponse;
+import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -35,16 +38,13 @@ import java.util.Map;
  * @author nekoimi 2022/4/25
  */
 @Slf4j
+@Primary
+@Component
+@AllArgsConstructor
 public class LocalDiskFileService implements FileService {
     private final StorageProperties properties;
     private final IdentifierGenerator idGenerator;
     private final WebClient webClient;
-
-    public LocalDiskFileService(StorageProperties properties, IdentifierGenerator idGenerator, WebClient webClient) {
-        this.properties = properties;
-        this.idGenerator = idGenerator;
-        this.webClient = webClient;
-    }
 
     /**
      * <p>创建日期文件目录</p>

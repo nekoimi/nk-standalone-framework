@@ -1,17 +1,11 @@
 package com.nekoimi.standalone.framework.config;
 
-import cn.hutool.core.collection.ListUtil;
 import cn.hutool.core.util.ClassUtil;
 import cn.hutool.core.util.StrUtil;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nekoimi.standalone.framework.config.properties.AppProperties;
-import com.nekoimi.standalone.framework.contract.RedisMessageListener;
 import com.nekoimi.standalone.framework.utils.RedisTemplateBuilder;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;
@@ -20,21 +14,12 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.cache.RedisCacheConfiguration;
 import org.springframework.data.redis.cache.RedisCacheManager;
-import org.springframework.data.redis.connection.ReactiveRedisConnectionFactory;
-import org.springframework.data.redis.connection.ReactiveSubscription;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.*;
-import org.springframework.data.redis.listener.ChannelTopic;
-import org.springframework.data.redis.listener.ReactiveRedisMessageListenerContainer;
-import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
-import org.springframework.data.redis.serializer.RedisSerializationContext;
-import org.springframework.data.redis.serializer.RedisSerializer;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
-import reactor.core.scheduler.Schedulers;
+import org.springframework.integration.redis.util.RedisLockRegistry;
 
 import java.time.Duration;
 import java.util.*;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 /**
@@ -47,7 +32,18 @@ import java.util.stream.Collectors;
 public class RedisConfiguration {
 
     /**
-     * 缓存key生成策略
+     * <p>Redis分布式锁</p>
+     *
+     * @param connectionFactory
+     * @return
+     */
+    @Bean
+    public RedisLockRegistry redisLockRegistry(RedisConnectionFactory connectionFactory) {
+        return new RedisLockRegistry(connectionFactory, "redis-lock");
+    }
+
+    /**
+     * <p>缓存key生成策略</p>
      *
      * @return
      */
@@ -63,7 +59,7 @@ public class RedisConfiguration {
             keyBuilder.append("[");
             List<String> paramList = Arrays.stream(params)
                     .filter(Objects::nonNull)
-                    .map(StrUtil::toString)
+                    .map(String::valueOf)
                     .filter(StrUtil::isNotBlank)
                     .collect(Collectors.toList());
             keyBuilder.append(String.join(".", paramList));
@@ -74,7 +70,7 @@ public class RedisConfiguration {
     }
 
     /**
-     * 缓存配置
+     * <p>缓存Manager配置</p>
      *
      * @param connectionFactory
      * @return
@@ -92,64 +88,19 @@ public class RedisConfiguration {
     }
 
     /**
-     * 消息处理线程池
-     *
-     * @return
+     * ==========================================================================
+     * ReactiveRedisTemplate
+     * ==========================================================================
      */
-    @Bean(name = "redisMessageThreadPoolTaskExecutor", destroyMethod = "shutdown")
-    public ThreadPoolTaskExecutor redisMessageThreadPoolTaskExecutor() {
-        ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor();
-        taskExecutor.setCorePoolSize(4);
-        taskExecutor.setMaxPoolSize(8);
-        taskExecutor.setKeepAliveSeconds(60);
-        taskExecutor.setQueueCapacity(1024);
-        taskExecutor.setThreadNamePrefix("redis-mq-");
-        taskExecutor.initialize();
-        return taskExecutor;
-    }
 
     /**
-     * <p>配置redis的消息订阅</p>
-     *
-     * @param connectionFactory
-     * @param objectMapper
-     * @param objectProvider
-     * @param threadPoolTaskExecutor
-     * @return
-     */
-    @Bean
-    @ConditionalOnBean(RedisMessageListener.class)
-    public ReactiveRedisMessageListenerContainer reactiveRedisMessageListenerContainer(ReactiveRedisConnectionFactory connectionFactory,
-                                                                                       ObjectMapper objectMapper,
-                                                                                       ObjectProvider<List<RedisMessageListener>> objectProvider,
-                                                                                       @Qualifier("redisMessageThreadPoolTaskExecutor") ThreadPoolTaskExecutor threadPoolTaskExecutor) {
-        ReactiveRedisMessageListenerContainer container = new ReactiveRedisMessageListenerContainer(connectionFactory);
-        List<RedisMessageListener> redisMessageListeners = objectProvider.getIfAvailable();
-        if (redisMessageListeners != null && !redisMessageListeners.isEmpty()) {
-            for (RedisMessageListener listener : redisMessageListeners) {
-                List<ChannelTopic> topics = ListUtil.of(ChannelTopic.of(listener.message().topic()));
-                RedisSerializationContext.SerializationPair<String> channelSerializer = RedisSerializationContext.SerializationPair.fromSerializer(RedisSerializer.string());
-                Jackson2JsonRedisSerializer<?> jackson2JsonRedisSerializer = new Jackson2JsonRedisSerializer<>(listener.messageType());
-                jackson2JsonRedisSerializer.setObjectMapper(objectMapper);
-                RedisSerializationContext.SerializationPair<?> messageSerializer = RedisSerializationContext.SerializationPair.fromSerializer(jackson2JsonRedisSerializer);
-                container.receive(topics, channelSerializer, messageSerializer)
-                        .publishOn(Schedulers.fromExecutor(threadPoolTaskExecutor))
-                        .subscribeOn(Schedulers.fromExecutor(threadPoolTaskExecutor))
-                        .subscribe((Consumer<ReactiveSubscription.Message<String, ?>>) message ->
-                                listener.handleMessage(message.getMessage(), message.getChannel()));
-            }
-        }
-        return container;
-    }
-
-    /**
-     * 通用redisTemplate
+     * <p>通用ReactiveRedisTemplate</p>
      *
      * @return
      */
     @Bean(name = "reactiveRedisTemplate")
     public ReactiveRedisTemplate<String, Object> reactiveRedisTemplate() {
-        return RedisTemplateBuilder.build(Object.class);
+        return RedisTemplateBuilder.buildReactive(Object.class);
     }
 
     /**
@@ -189,6 +140,62 @@ public class RedisConfiguration {
      */
     @Bean
     public ReactiveZSetOperations<String, Object> zSetOperations(ReactiveRedisTemplate<String, Object> redisTemplate) {
+        return redisTemplate.opsForZSet();
+    }
+
+    /**
+     * ==========================================================================
+     * RedisTemplate
+     * ==========================================================================
+     */
+
+    /**
+     * <p>通用RedisTemplate</p>
+     *
+     * @return
+     */
+    @Bean(name = "redisTemplate")
+    public RedisTemplate<String, Object> redisTemplate() {
+        return RedisTemplateBuilder.build(Object.class);
+    }
+
+    /**
+     * 对hash类型的数据操作
+     */
+    @Bean
+    public HashOperations<String, String, Object> hashOperations(RedisTemplate<String, Object> redisTemplate) {
+        return redisTemplate.opsForHash();
+    }
+
+    /**
+     * 对redis字符串类型数据操作
+     */
+    @Bean
+    public ValueOperations<String, Object> valueOperations(RedisTemplate<String, Object> redisTemplate) {
+        return redisTemplate.opsForValue();
+    }
+
+    /**
+     * 对链表类型的数据操作
+     */
+    @Bean
+    public ListOperations<String, Object> listOperations(RedisTemplate<String, Object> redisTemplate) {
+        return redisTemplate.opsForList();
+    }
+
+    /**
+     * 对无序集合类型的数据操作
+     */
+    @Bean
+    public SetOperations<String, Object> setOperations(RedisTemplate<String, Object> redisTemplate) {
+        return redisTemplate.opsForSet();
+    }
+
+    /**
+     * 对有序集合类型的数据操作
+     */
+    @Bean
+    public ZSetOperations<String, Object> zSetOperations(RedisTemplate<String, Object> redisTemplate) {
         return redisTemplate.opsForZSet();
     }
 

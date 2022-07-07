@@ -1,16 +1,18 @@
 package com.nekoimi.standalone.framework.error.handler;
 
-import cn.hutool.core.exceptions.ExceptionUtil;
 import com.nekoimi.standalone.framework.contract.error.ErrorExceptionHandler;
 import com.nekoimi.standalone.framework.error.ErrorDetails;
 import com.nekoimi.standalone.framework.error.Errors;
-import com.nekoimi.standalone.framework.protocol.ErrorDetailsImpl;
+import com.nekoimi.standalone.framework.error.IErrorDetails;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
+
+import java.io.PrintWriter;
+import java.io.StringWriter;
 
 /**
  * nekoimi  2021/7/21 下午3:34
@@ -26,16 +28,20 @@ public class ResponseStatusErrorExceptionHandler implements ErrorExceptionHandle
     }
 
     @Override
-    public Mono<? extends ErrorDetails> handle(ServerWebExchange exchange, ResponseStatusException e) {
+    public Mono<? extends IErrorDetails> handle(ServerWebExchange exchange, ResponseStatusException e) {
         HttpStatus status = e.getStatus();
         return Mono.fromCallable(() -> {
-            var error = Errors.DEFAULT_SERVER_ERROR;
+            IErrorDetails error = Errors.DEFAULT_SERVER_ERROR;
             if (status.is4xxClientError()) {
                 error = buildHttpStatusClientError(status);
             } else if (status.is5xxServerError()) {
                 error = buildHttpStatusServerError(status);
             }
-            return ErrorDetailsImpl.of(error.code(), error.message(), ExceptionUtil.getRootCauseMessage(e));
+            StringWriter stackTrace = new StringWriter();
+            PrintWriter printWriter = new PrintWriter(stackTrace);
+            e.printStackTrace(printWriter);
+            String traceMessage = stackTrace.toString();
+            return ErrorDetails.of(error.code(), e.getMessage(), traceMessage);
         });
     }
 

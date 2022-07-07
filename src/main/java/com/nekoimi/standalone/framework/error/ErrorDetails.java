@@ -1,12 +1,34 @@
 package com.nekoimi.standalone.framework.error;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 /**
- * nekoimi  2021/12/6 14:43
- *
- * 通用异常接口
+ * nekoimi  2021/12/13 22:35
  */
-public interface ErrorDetails {
-    Integer code();
-    String message();
-    String trace();
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor(staticName = "of")
+public class ErrorDetails implements IErrorDetails {
+    private Integer code;
+    private String msg;
+    private String trace;
+
+    @Override
+    public Integer code() {
+        return code;
+    }
+
+    @Override
+    public String message() {
+        return msg;
+    }
+
+    @Override
+    public String trace() {
+        return trace;
+    }
 }

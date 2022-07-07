@@ -23,7 +23,7 @@ public class JsonUtils {
             return ObjectMapperHolder.getInstance().writeValueAsString(src);
         } catch (JsonProcessingException e) {
             log.error(e.getMessage(), e);
-            return e.getMessage();
+            return null;
         }
     }
 

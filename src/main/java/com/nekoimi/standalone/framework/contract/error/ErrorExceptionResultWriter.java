@@ -1,6 +1,6 @@
 package com.nekoimi.standalone.framework.contract.error;
 
-import com.nekoimi.standalone.framework.error.ErrorDetails;
+import com.nekoimi.standalone.framework.error.IErrorDetails;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
@@ -16,5 +16,5 @@ public interface ErrorExceptionResultWriter {
      * @param error
      * @return
      */
-    Mono<Void> writer(ServerWebExchange exchange, ErrorDetails error);
+    Mono<Void> writer(ServerWebExchange exchange, IErrorDetails error);
 }

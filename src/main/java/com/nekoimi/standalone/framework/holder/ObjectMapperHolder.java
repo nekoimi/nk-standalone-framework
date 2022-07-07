@@ -16,6 +16,7 @@ public class ObjectMapperHolder implements ApplicationContextAware {
     public static ObjectMapper getInstance() {
         return INSTANCE;
     }
+
     @Override
     public void setApplicationContext(ApplicationContext context) throws BeansException {
         ObjectMapperHolder.INSTANCE = context.getBean(ObjectMapper.class);

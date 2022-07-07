@@ -16,6 +16,6 @@ import java.util.List;
 @Component
 @ConfigurationProperties(prefix = "app.security")
 public class SecurityProperties {
-    // 不需要认证匹配列表
+    // 不需要认证的路径列表
     private List<String> permitAll = new ArrayList<>();
 }

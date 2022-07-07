@@ -3,6 +3,7 @@ package com.nekoimi.standalone.framework.contract;
 import cn.hutool.core.convert.Convert;
 import cn.hutool.core.lang.TypeReference;
 
+import java.io.Serializable;
 import java.lang.reflect.Type;
 
 /**
@@ -10,7 +11,7 @@ import java.lang.reflect.Type;
  * <p>
  * 类型转换接口
  */
-public interface TypeConvertible {
+public interface TypeConvertible extends Serializable {
 
     /**
      * @param toType
